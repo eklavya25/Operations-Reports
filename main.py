@@ -3,7 +3,7 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 
-st.set_page_config(page_title="WIP Report Generator (fixed)", layout="wide")
+st.set_page_config(page_title="WIP Report Generator", layout="wide")
 
 # ----------------------------
 # Helper functions
@@ -58,7 +58,7 @@ def safe_num(x):
 # ----------------------------
 # UI
 # ----------------------------
-st.title("WIP Report Generator")
+st.title("WIP-Hourly Report Generator")
 st.write("Upload your `.xls` / `.xlsx` file")
 
 uploaded_file = st.file_uploader("Choose a WIP file", type=["xls", "xlsx"])
@@ -213,9 +213,9 @@ if uploaded_file is not None:
 
     st.divider()
 
-    # Show sample of the sanitized dataframe (no NaN names)
-    st.subheader("Preview (first 10 rows)")
-    st.dataframe(df1.head(10))
+    # # Show sample of the sanitized dataframe (no NaN names)
+    # st.subheader("Preview (first 10 rows)")
+    # st.dataframe(df1.head(10))
 
 else:
     st.info("📥 Please upload your Excel file to start.")
