@@ -16,18 +16,34 @@ def calculate_units(group, day_col, hour_col):
         g[hour_col] = g[hour_col].fillna(0).astype(int)
 
         if day in ['Fri', 'Mon']:
-            cutoff_rows = g[g[hour_col] == 18]
-            if not cutoff_rows.empty:
-                cutoff_index = cutoff_rows.index[0]
+            base_cutoff = 18
+            cutoff_index = None
+            # look for 18,19,...,23 (first occurrence wins)
+            for h in range(base_cutoff, 24):
+                cutoff_rows = g[g[hour_col] == h]
+                if not cutoff_rows.empty:
+                    cutoff_index = cutoff_rows.index[0]
+                    break
+            if cutoff_index is not None:
                 total += g.loc[g.index < cutoff_index, '#Units'].sum()
+
         elif day in ['Tue', 'Wed', 'Thu', 'Sat']:
-            cutoff_rows = g[g[hour_col] == 17]
-            if not cutoff_rows.empty:
-                cutoff_index = cutoff_rows.index[0]
+            base_cutoff = 17
+            cutoff_index = None
+            # look for 17,18,...,23 (first occurrence wins)
+            for h in range(base_cutoff, 24):
+                cutoff_rows = g[g[hour_col] == h]
+                if not cutoff_rows.empty:
+                    cutoff_index = cutoff_rows.index[0]
+                    break
+            if cutoff_index is not None:
                 total += g.loc[g.index < cutoff_index, '#Units'].sum()
+
         elif day == 'Sun':
             total += g['#Units'].sum()
+
     return total
+
 
 def load_wip_file(file):
     if file.name.endswith(".xls") or file.name.endswith(".xlsx"):
