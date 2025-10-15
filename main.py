@@ -154,15 +154,20 @@ if uploaded_file is not None:
     df_ExoCad = df_ExoCad[~df_ExoCad['Pending For'].isin(['IOS QC', 'Scan QC'])]
     df_ExoCad['#Units'] = pd.to_numeric(df_ExoCad['#Units'], errors='coerce').fillna(0)
 
-    df_ExoCad['Restart Date_Day'] = df_ExoCad['Restart Date'].dt.strftime('%a').fillna('')
-    df_ExoCad['Restart Date_Hour'] = df_ExoCad['Restart Date'].dt.hour.fillna(0).astype(int)
-    df_ExoCad['Case Uploaded_Day'] = df_ExoCad['Case Uploaded Time'].dt.strftime('%a').fillna('')
-    df_ExoCad['Case Uploaded_Hour'] = df_ExoCad['Case Uploaded Time'].dt.hour.fillna(0).astype(int)
+    df_ExoCad_Previous = df1[df1.get('Skill Level', '').isin(exo_filter)].copy()
+    df_ExoCad_Previous = df_ExoCad_Previous[~df_ExoCad_Previous['Pending For'].isin(['IOS QC', 'Scan QC'])]
+    df_ExoCad_Previous = df_ExoCad_Previous[~df_ExoCad_Previous['Destination'].isin(['In-House'])]
+    df_ExoCad_Previous['#Units'] = pd.to_numeric(df_ExoCad_Previous['#Units'], errors='coerce').fillna(0)
 
-    df_restart_valid = df_ExoCad[df_ExoCad['Restart Date'].notna()].sort_values(by='Restart Date').reset_index(drop=True)
+    df_ExoCad_Previous['Restart Date_Day'] = df_ExoCad_Previous['Restart Date'].dt.strftime('%a').fillna('')
+    df_ExoCad_Previous['Restart Date_Hour'] = df_ExoCad_Previous['Restart Date'].dt.hour.fillna(0).astype(int)
+    df_ExoCad_Previous['Case Uploaded_Day'] = df_ExoCad_Previous['Case Uploaded Time'].dt.strftime('%a').fillna('')
+    df_ExoCad_Previous['Case Uploaded_Hour'] = df_ExoCad_Previous['Case Uploaded Time'].dt.hour.fillna(0).astype(int)
+
+    df_restart_valid = df_ExoCad_Previous[df_ExoCad_Previous['Restart Date'].notna()].sort_values(by='Restart Date').reset_index(drop=True)
     total_units_restart = calculate_units(df_restart_valid, 'Restart Date_Day', 'Restart Date_Hour')
 
-    df_restart_blank = df_ExoCad[df_ExoCad['Restart Date'].isna()].sort_values(by='Case Uploaded Time').reset_index(drop=True)
+    df_restart_blank = df_ExoCad_Previous[df_ExoCad_Previous['Restart Date'].isna()].sort_values(by='Case Uploaded Time').reset_index(drop=True)
     total_units_case_uploaded = calculate_units(df_restart_blank, 'Case Uploaded_Day', 'Case Uploaded_Hour')
 
     total_ExoCad_WIP_Previous = total_units_restart + total_units_case_uploaded
