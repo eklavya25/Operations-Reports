@@ -89,7 +89,7 @@ if uploaded_file is not None:
         st.error("Uploaded file doesn't look like the expected WIP export (too few rows). Check the file and retry.")
         st.stop()
 
-    # slice (same as your original logic)
+    # slice 
     df1 = df.iloc[6:-1].reset_index(drop=True)
 
     if df1.shape[0] == 0:
@@ -225,14 +225,16 @@ if uploaded_file is not None:
     col1.metric("iOS QC WIP Advance", safe_num(total_IOSQC_WIP_Advance))
     col2.metric("ExoCad WIP Previous", safe_num(total_ExoCad_WIP_Previous))
     col2.metric("ExoCad WIP Advance", safe_num(total_ExoCad_WIP_Advance))
-    col3.metric("3Shape Total Units", safe_num(total_units_3Shape))
+    col3.metric("EDDL WIP Previous", safe_num(total_EDDL_WIP_Previous))
+    col3.metric("EDDL WIP Advance", safe_num(total_EDDL_WIP_Advance))
 
     st.divider()
 
-    col4, col5, col6 = st.columns(3)
-    col4.metric("Appliance Units", safe_num(total_units_App))
-    col5.metric("EDDL WIP Previous", safe_num(total_EDDL_WIP_Previous))
-    col6.metric("EDDL WIP Advance", safe_num(total_EDDL_WIP_Advance))
+    col5, col6, col7 = st.columns(3)
+    col5.metric("3Shape Total Units", safe_num(total_units_3Shape))
+    col6.metric("Appliance Units", safe_num(total_units_App))
+    col7.metric("", safe_num(""))
+    
 
     st.divider()
 
