@@ -2,6 +2,7 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
+import re
 
 st.set_page_config(page_title="WIP Report Generator", layout="wide")
 
@@ -152,6 +153,27 @@ if uploaded_file is not None:
     exo_filter = ['Exocad(1)', 'Exocad(2)', 'Exocad(3)', 'Exocad(4)', 'Exocad(5)', 'Exocad(6)', 'Exocad(8)']
     df_ExoCad = df1[df1.get('Skill Level', '').isin(exo_filter)].copy()
     df_ExoCad = df_ExoCad[~df_ExoCad['Pending For'].isin(['IOS QC', 'Scan QC','Hold by Scan QC'])]
+
+    
+    # List of IDs to check
+    Appliance_list = [
+    "L00140", "D00156", "D00251", "D00280", "D00272", "D00190", "D00881", "D00119", "D01053",
+    "L00796", "L00799", "D01058", "D01056", "D01057", "D01219", "A00796", "A00799", "M00799",
+    "L0251", "A01058", "A01053", "M01056", "A01056", "M01186", "M00119", "M01219", "AJAY251",
+    "L01426", "A01426", "N00119", "L01218", "EMLA185", "ELA185", "MLA186E", "LA181M", "LA136",
+    "SB1426", "MA181M", "MLA186", "L00156", "L00251", "L00190", "MD001", "L00272", "L00280",
+    "M00251", "L00441", "M00280", "A00156", "A00190", "L00448", "M00448", "M00441", "L00730",
+    "M0021", "A00881", "M0050", "J00730", "M00881", "A00119", "M01053", "M01057", "ABH280",
+    "M01058", "A01057", "M00796", "L01186", "L01192", "M01192", "L01205", "EA001", "L01219",
+    "M01205", "SBM1426", "LA187", "L01647", "M01647", "LA136A", "LA185M", "LA181EM+", "MLA187",
+    "LA127", "MLA184", "LA181EM", "LA184", "LA183", "MLA127", "LA186EM", "LA185EM", "LA128",
+    "MLA128", "MLA183", "LA186M", "A01218", "LA182", "MLA182"
+    ]
+
+    Appliance_pattern = '|'.join(map(re.escape, Appliance_list))
+    df_ExoCad = df_ExoCad[~df_ExoCad['Hold By'].str.contains(Appliance_pattern, na=False)].copy()
+
+
     df_ExoCad['#Units'] = pd.to_numeric(df_ExoCad['#Units'], errors='coerce').fillna(0)
 
     df_ExoCad_Previous = df1[df1.get('Skill Level', '').isin(exo_filter)].copy()
@@ -180,17 +202,48 @@ if uploaded_file is not None:
     shape_filter = ['3Shape(1)', '3Shape(2)', '3Shape(3)', '3Shape(4)', '3Shape(5)', '3Shape(6)', '3Shape(8)']
     df_3Shape = df1[df1.get('Skill Level', '').isin(shape_filter)].copy()
     df_3Shape = df_3Shape[~df_3Shape['Pending For'].isin(['IOS QC', 'Scan QC', 'Hold by Scan QC'])]
+    df_3Shape = df_3Shape[~df_3Shape['Hold By'].str.contains(Appliance_pattern, na=False)].copy()
     df_3Shape['#Units'] = pd.to_numeric(df_3Shape['#Units'], errors='coerce').fillna(0)
     total_units_3Shape = df_3Shape["#Units"].sum()
 
     # ----------------------------
     # Appliance WIP 
     # ----------------------------
-    df_App = df1[df1.get("Case Type", "").isin(["M","M+"])].copy()
+    # df_App = df1[df1.get("Case Type", "").isin(["M","M+"])].copy()
+
+
+    # df_App = df1[df1['Hold By'].str.contains(Appliance_pattern, na=False)].copy()
+    # #df_App = df_App.drop_duplicates(subset='Order No', keep='first').copy()
+
+
+
+    # df_App = df_App[~df_App.get("Destination", "").isin(["Easydent Dental Lab"])]
+    # df_App['#Units'] = pd.to_numeric(df_App['#Units'], errors='coerce').fillna(0)
+    # df_App["#Units"] = df_App["#Units"].apply(lambda x: 1 if x < 20 else 2)
+    # total_units_App = df_App["#Units"].sum()
+
+
+
+    df_App = df1[
+        df1.get("Case Type", "").isin(["M","M+"]) | 
+        df1['Hold By'].str.contains(Appliance_pattern, na=False)
+        ].copy()
+
+    # Exclude certain Destination
     df_App = df_App[~df_App.get("Destination", "").isin(["Easydent Dental Lab"])]
+
+    df_App = df_App.drop_duplicates(subset='Order No', keep='first').copy()
+
+    # Convert #Units to numeric and apply logic
     df_App['#Units'] = pd.to_numeric(df_App['#Units'], errors='coerce').fillna(0)
-    df_App["#Units"] = df_App["#Units"].apply(lambda x: 1 if x < 20 else 2)
-    total_units_App = df_App["#Units"].sum()
+    df_App['#Units'] = df_App['#Units'].apply(lambda x: 1 if x <= 20 else 2)
+
+    # Calculate total units
+    total_units_App = df_App['#Units'].sum()
+
+
+
+
 
     # ----------------------------
     # EDDL WIP
@@ -199,6 +252,20 @@ if uploaded_file is not None:
     df_EDDL = df_EDDL[~df_EDDL['Pending For'].isin(['IOS QC', 'Scan QC', 'Hold by Scan QC'])]
 
     df_EDDL.loc[df_EDDL['Skill Level'].isin(['3Shape(7)', 'Exocad(7)']), '#Units'] = df_EDDL.loc[df_EDDL['Skill Level'].isin(['3Shape(7)', 'Exocad(7)']), '#Units'].apply(lambda x: 1 if x < 20 else 2)
+  
+
+    # Function to update #Units
+    def update_units(row):
+        if pd.isna(row['#Units']):
+            return row['#Units']  # Keep NaN as is
+        if re.search(Appliance_pattern, str(row['Hold By'])):
+            return 1 if row['#Units'] <= 20 else 2
+        return row['#Units']
+
+    # Apply function row-wise
+    df_EDDL['#Units'] = df_EDDL.apply(update_units, axis=1)
+
+
 
     df_EDDL['#Units'] = pd.to_numeric(df_EDDL['#Units'], errors='coerce').fillna(0)
 
