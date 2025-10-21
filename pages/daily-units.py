@@ -4,9 +4,9 @@ import re
 from io import BytesIO
 from datetime import datetime
 
-st.set_page_config(page_title="Lab Summary Report", layout="wide")
+st.set_page_config(page_title="Daily Units", layout="wide")
 
-st.title("📊 Lab Summary Report Generator")
+st.title("📊 Daily Units")
 
 # Step 1: Upload file
 uploaded_file = st.file_uploader("📂 Upload the Booked Data file (.xls or .xlsx)", type=["xls", "xlsx"])
@@ -93,8 +93,8 @@ if uploaded_file and user_date_input:
         st.subheader("📄 Summary Preview")
         st.dataframe(summary_df, use_container_width=True)
 
-        st.write(f"**Redesign count:** {Redesign_count} | **Sum:** {Redesign_sum}")
-        st.write(f"**Restart count:** {Restarted_count} | **Sum:** {Restarted_sum}")
+        st.write(f"**Redesign Cases:** {Redesign_count} | **Units:** {Redesign_sum}")
+        st.write(f"**Restart Cases:** {Restarted_count} | **Units:** {Restarted_sum}")
 
         buffer = BytesIO()
         with pd.ExcelWriter(buffer, engine='openpyxl') as writer:
