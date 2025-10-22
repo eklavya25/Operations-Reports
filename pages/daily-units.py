@@ -90,20 +90,38 @@ if uploaded_file and user_date_input:
         summary_df = summary_df.merge(cancel_sum, on='Lab Name', how='left')
         summary_df[['Hold', 'Cancel']] = summary_df[['Hold', 'Cancel']].fillna(0)
 
-        st.subheader("📄 Summary Preview")
+        Total_Cases = sum(summary_df["Count"])
+        Total_Units = sum(summary_df["Sum"])
+        Total_Hold = sum(summary_df["Hold"])
+        Total_Cancel = sum(summary_df["Cancel"])
+
+        st.subheader("📄 Preview")
         st.dataframe(summary_df, use_container_width=True)
 
+        st.subheader("Redesign and Restart Cases")
         st.write(f"**Redesign Cases:** {Redesign_count} | **Units:** {Redesign_sum}")
         st.write(f"**Restart Cases:** {Restarted_count} | **Units:** {Restarted_sum}")
+
+        st.subheader("Summary without considering Denture")
+
+        st.write(f"**Total Cases:** {Total_Cases}")
+        st.write(f"**Total Units:** {Total_Units}")
+        st.write(f"**Total Hold:** {Total_Hold}")
+        st.write(f"**Total Cancel:** {Total_Cancel}")
+
+        
 
         buffer = BytesIO()
         with pd.ExcelWriter(buffer, engine='openpyxl') as writer:
             summary_df.to_excel(writer, index=False, sheet_name='Summary')
-            writer.save()
 
+        # Move buffer position to the beginning
+        buffer.seek(0)
+
+        # Download button
         st.download_button(
             label="📥 Download Summary Excel",
-            data=buffer.getvalue(),
+            data=buffer,
             file_name="Lab_Summary.xlsx",
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         )
