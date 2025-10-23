@@ -129,8 +129,8 @@ if uploaded_file and user_date_input:
 
         st.write(f"**Total Cases:** {Total_Cases}")
         st.write(f"**Total Units:** {Total_Units}")
-        st.write(f"**Total Hold:** {Total_Hold}")
-        st.write(f"**Total Cancel:** {Total_Cancel}")
+        st.write(f"**Total Hold:** {int (Total_Hold)}")
+        st.write(f"**Total Cancel:** {int (Total_Cancel)}")
 
         
 
