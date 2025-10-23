@@ -125,7 +125,7 @@ if uploaded_file and user_date_input:
         st.write(f"**Redesign Cases:** {Redesign_count} | **Units:** {Redesign_sum}")
         st.write(f"**Restart Cases:** {Restarted_count} | **Units:** {Restarted_sum}")
 
-        st.subheader("Summary without considering Denture")
+        st.subheader("Summary")
 
         st.write(f"**Total Cases:** {Total_Cases}")
         st.write(f"**Total Units:** {Total_Units}")
