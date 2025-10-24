@@ -14,6 +14,9 @@ uploaded_file = st.file_uploader("📂 Upload the Booked Data file (.xlsx)", typ
 # Step 2: Date input
 user_date_input = st.text_input("📅 Enter cutoff date (DD/MM)", placeholder="e.g. 20/10")
 
+
+user_limit = st.number_input("How many 3shape units are in EDDL?", min_value=1, step=1)
+
 if uploaded_file and user_date_input:
     try:
         cutoff_date = datetime.strptime(user_date_input, "%d/%m").replace(year=2025)
@@ -62,6 +65,43 @@ if uploaded_file and user_date_input:
 
         df1 = df1.drop(columns=['date_dt', 'time_dt'])
 
+
+        # Example condition
+        mask = (
+            (df1["Destination"] == "Easydent Dental Lab") &
+            (df1["Software"].isna()) &
+            (
+                df1["Lab Name"].str.contains("EDDL Impression|Showcase Dental Lab|4G Dental Lab", case=False, na=False)
+            )
+        )
+
+        # Update the blank values to "Exocad"
+        df1.loc[mask, "Software"] = "Exocad"
+
+
+
+        # Step 1: Filter matching rows
+        mask = (
+            (df1["Destination"] == "Easydent Dental Lab") &
+            (df1["Software"].isna()) &
+            (df1["Lab Name"].str.contains("Easy Dent Dental Lab", case=False, na=False))
+        )
+
+        filtered = df1[mask].copy()
+
+        # Step 2: Cumulative sum
+        filtered["cum_units"] = filtered["#Units"].cumsum()
+
+        # Step 3: Assign Software based on cumulative sum
+        filtered["Software"] = filtered["cum_units"].apply(lambda x: "3Shape" if x <= user_limit else "Exocad")
+
+        # Step 4: Update original dataframe
+        df1.loc[filtered.index, "Software"] = filtered["Software"]
+
+
+        Exocad_software = df1[df1["Software"] == "Exocad"]
+        Exocad_cases = Exocad_software["#Units"].count() 
+        Exocad_units = Exocad_software["#Units"].sum()
         
         # Step 1: create a modified copy for aggregation
         df1_mod = df1.copy()
@@ -111,6 +151,49 @@ if uploaded_file and user_date_input:
         # ✅ Final rename (optional)
         summary_df = summary_df.rename(columns={'Lab Name Adjusted': 'Lab Name'})
 
+
+
+
+        labs_to_clean = [
+            "Easy Dent Dental Lab",
+            "4G Dental Lab",
+            "Showcase Dental Lab",
+            "EDDL Implants",
+            "Dental Infinity Laboratory Ltd",
+            "EDDL Impression",
+            "Marvel Dental"
+        ]
+
+        def clean_if_target(name):
+            if not isinstance(name, str):
+                return name
+            if any(lab.lower() in name.lower() for lab in labs_to_clean):
+                cleaned = re.sub(r'^-+', '', name)
+                cleaned = re.sub(r'[\s-]*EDDL[\s-]*$', '', cleaned, flags=re.IGNORECASE)
+                return cleaned.strip()
+            return name
+
+        summary_df["Lab Name"] = summary_df["Lab Name"].apply(clean_if_target)
+
+
+        
+        df_x = summary_df.copy()
+
+        base_labs = df_x["Lab Name"].str.extract(r"^(.*?)-\s*EDDL$", expand=False).dropna().unique()
+
+        for base in base_labs:
+            mask = df_x["Lab Name"].isin([base, f"{base}-EDDL", f"{base}- EDDL"])
+            if mask.sum() > 0:
+                min_first = df_x.loc[mask, "First_Order_ID"].min()
+                max_last = df_x.loc[mask, "Last_Order_ID"].max()
+                df_x.loc[mask, "First_Order_ID"] = min_first
+                df_x.loc[mask, "Last_Order_ID"] = max_last
+
+        summary_df = df_x
+
+
+
+
         Total_Cases = sum(summary_df["Count"])
         Total_Units = sum(summary_df["Sum"])
         Total_Hold = sum(summary_df["Hold"])
@@ -132,7 +215,9 @@ if uploaded_file and user_date_input:
         st.write(f"**Total Hold:** {int (Total_Hold)}")
         st.write(f"**Total Cancel:** {int (Total_Cancel)}")
 
-        
+        st.subheader("Total cases and units in Exocad")
+        st.write(f"**Exocad cases:** {int (Exocad_cases)}")
+        st.write(f"**Exocad Units:** {int (Exocad_units)}")
 
         buffer = BytesIO()
         with pd.ExcelWriter(buffer, engine='openpyxl') as writer:
