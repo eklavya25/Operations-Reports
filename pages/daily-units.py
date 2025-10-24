@@ -15,7 +15,7 @@ uploaded_file = st.file_uploader("📂 Upload the Booked Data file (.xlsx)", typ
 user_date_input = st.text_input("📅 Enter cutoff date (DD/MM)", placeholder="e.g. 20/10")
 
 
-user_limit = st.number_input("How many 3shape units are in EDDL?", min_value=1, step=1)
+user_limit = st.number_input("How many 3shape units are in EDDL?", min_value=0, step=50)
 
 if uploaded_file and user_date_input:
     try:
