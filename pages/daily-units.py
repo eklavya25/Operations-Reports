@@ -8,8 +8,14 @@ st.set_page_config(page_title="Daily Units", layout="wide")
 
 st.title("📊 Daily Units")
 
+st.info("Steps")
+st.write("Step-1 Download Booked data")
+st.write("Step-2 Remove top 6 rows and the last row")
+st.write("Step-3 Find all the Denture cases from EasyDentConnect")
+st.write("Step-4 Save the file as .xlsx")
+st.write("Step-5 Then only upload it here")
 # Step 1: Upload file
-uploaded_file = st.file_uploader("📂 Upload the Booked Data file (.xlsx)", type=["xls", "xlsx"])
+uploaded_file = st.file_uploader("📂 Upload the Booked Data after finding all the Dentures (Remove top 6 rows and the last row)", type=["xlsx"])
 
 # Step 2: Date input
 user_date_input = st.text_input("📅 Enter cutoff date (DD/MM)", placeholder="e.g. 20/10")
