@@ -243,5 +243,5 @@ if uploaded_file and user_date_input:
     except Exception as e:
         st.error(f"❌ Error: {e}")
 
-else:
-    st.info("👆 Please upload your `.xlsx` file and enter a cutoff date (DD/MM) to begin.")
+# else:
+#     st.info("👆 Please upload your `.xlsx` file and enter a cutoff date (DD/MM) to begin.")
