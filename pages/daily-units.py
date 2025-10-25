@@ -13,7 +13,7 @@ st.write("Step-1 Download Booked data")
 st.write("Step-2 Remove top 6 rows and the last row")
 st.write("Step-3 Find all the Denture cases from EasyDentConnect")
 st.write("Step-4 Save the file as .xlsx")
-st.write("Step-5 Then only upload it here")
+st.write("Step-5 Upload the .xlsx file here")
 # Step 1: Upload file
 uploaded_file = st.file_uploader("📂 Upload the Booked Data after finding all the Dentures (Remove top 6 rows and the last row)", type=["xlsx"])
 
