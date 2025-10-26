@@ -3,6 +3,7 @@ import pandas as pd
 import re
 from io import BytesIO
 from datetime import datetime
+from openpyxl import load_workbook
 
 st.set_page_config(page_title="Daily Units", layout="wide")
 
@@ -17,13 +18,15 @@ st.write("Step-5 Upload the .xlsx file here")
 # Step 1: Upload file
 uploaded_file = st.file_uploader("📂 Upload the Booked Data after finding all the Dentures (Remove top 6 rows and the last row)", type=["xlsx"])
 
+uploaded_file_2 = st.file_uploader("📂 Upload the Daily Units File here", type=["xlsx"])
+
 # Step 2: Date input
 user_date_input = st.text_input("📅 Enter cutoff date (DD/MM)", placeholder="e.g. 20/10")
 
 
 user_limit = st.number_input("How many 3shape units are in EDDL?", min_value=0, step=50)
 
-if uploaded_file and user_date_input:
+if uploaded_file and user_date_input and uploaded_file_2:
     try:
         cutoff_date = datetime.strptime(user_date_input, "%d/%m").replace(year=2025)
         cutoff_time = datetime.strptime("05:30", "%H:%M").time()
@@ -197,6 +200,15 @@ if uploaded_file and user_date_input:
 
         summary_df = df_x
 
+        # --- Aggregate summary_df to handle duplicates ---
+        summary_df_agg = summary_df.groupby("Lab Name", as_index=False).agg(
+        First_Order_ID=("First_Order_ID", "min"),
+        Last_Order_ID=("Last_Order_ID", "max"),
+        Count=("Count", "sum"),
+        Sum=("Sum", "sum"),
+        Hold=("Hold", "sum"),
+        Cancel=("Cancel", "sum")
+        )
 
 
 
@@ -204,6 +216,52 @@ if uploaded_file and user_date_input:
         Total_Units = sum(summary_df["Sum"])
         Total_Hold = sum(summary_df["Hold"])
         Total_Cancel = sum(summary_df["Cancel"])
+
+
+        wb = load_workbook(uploaded_file_2)
+        source = wb["format"]
+
+        # Create new sheet with the same formatting and formulas
+        target = wb.copy_worksheet(source)
+        target.title = "Todays Units"
+
+        # --- Step 3: Fill data into 'Todays Units' ---
+        for row in range(1, target.max_row + 1):
+            lab_name = target[f"A{row}"].value
+            if lab_name:
+                match = summary_df_agg[summary_df_agg["Lab Name"] == lab_name]
+                if not match.empty:
+                    match = match.iloc[0]
+                    target[f"B{row}"].value = match["First_Order_ID"]
+                    target[f"C{row}"].value = match["Last_Order_ID"]
+                    target[f"F{row}"].value = match["Count"]
+                    target[f"G{row}"].value = match["Sum"]
+                    target[f"I{row}"].value = match["Hold"]
+                    target[f"J{row}"].value = match["Cancel"]
+                elif lab_name == "Total No. of Exo (Units)":
+                    target[f"B{row}"].value = Exocad_cases
+                    target[f"C{row}"].value = Exocad_units
+
+                elif lab_name == "Re-Design":
+                    target[f"B{row}"].value = Redesign_count
+                    target[f"C{row}"].value = Redesign_sum
+
+                elif lab_name == "Restarted":
+                    target[f"B{row}"].value = Restarted_count
+                    target[f"C{row}"].value = Restarted_sum
+
+        # --- Step 4: Save workbook into memory for download ---
+        final_buffer = BytesIO()
+        wb.save(final_buffer)
+        final_buffer.seek(0)
+
+        # # --- Step 5: Streamlit download button ---
+        # st.download_button(
+        #     label="📘 Download The Full Report",
+        #     data=final_buffer,
+        #     file_name="Full_Report.xlsx",
+        #     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        # )
 
 
 
@@ -237,6 +295,14 @@ if uploaded_file and user_date_input:
             label="📥 Download Summary Excel",
             data=buffer,
             file_name="Lab_Summary.xlsx",
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        )
+
+        # --- Step 5: Streamlit download button ---
+        st.download_button(
+            label="📘 Download The Full Report",
+            data=final_buffer,
+            file_name="Full_Report.xlsx",
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         )
 
