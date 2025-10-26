@@ -4,19 +4,60 @@ import re
 from io import BytesIO
 from datetime import datetime
 from openpyxl import load_workbook
+# import shutil
+# import tempfile
+# import os
 
 st.set_page_config(page_title="Daily Units", layout="wide")
 
 st.title("📊 Daily Units")
 
-st.info("Steps")
-st.write("Step-1 Download Booked data")
-st.write("Step-2 Remove top 6 rows and the last row")
-st.write("Step-3 Find all the Denture cases from EasyDentConnect")
-st.write("Step-4 Save the file as .xlsx")
-st.write("Step-5 Upload the .xlsx file here")
+import streamlit as st
+
+st.markdown("### How to Use This")
+
+with st.container():
+    col1, col2 = st.columns([1, 4])
+    with col1:
+        st.markdown("#### Step 1")
+    with col2:
+        st.markdown("**Download the Booked Data**")
+
+    col1, col2 = st.columns([1, 4])
+    with col1:
+        st.markdown("#### Step 2")
+    with col2:
+        st.markdown("**Remove the top 6 rows and the last row** from the file.")
+
+    col1, col2 = st.columns([1, 4])
+    with col1:
+        st.markdown("#### Step 3")
+    with col2:
+        st.markdown("**Find all Denture cases** from *EasyDentConnect* and adjust them accordingly")
+
+    col1, col2 = st.columns([1, 4])
+    with col1:
+        st.markdown("#### Step 4")
+    with col2:
+        st.markdown("**Save the cleaned file** as `.xlsx` format.")
+
+    col1, col2 = st.columns([1, 4])
+    with col1:
+        st.markdown("#### Step 5")
+    with col2:
+        st.markdown("**Upload your `.xlsx` file** below to start processing.")
+
 # Step 1: Upload file
 uploaded_file = st.file_uploader("📂 Upload the Booked Data after finding all the Dentures (Remove top 6 rows and the last row)", type=["xlsx"])
+
+with st.container():
+    col1, col2 = st.columns([1, 4])
+    with col1:
+        st.markdown("#### Step 6")
+    with col2:
+        st.markdown("**Upload the Daily Units Report file `.xlsx`**")
+    with col2:
+        st.markdown("*There is a hidden sheet named **format,** don't remove it*")
 
 uploaded_file_2 = st.file_uploader("📂 Upload the Daily Units File here", type=["xlsx"])
 
@@ -219,15 +260,19 @@ if uploaded_file and user_date_input and uploaded_file_2:
 
 
         wb = load_workbook(uploaded_file_2)
-        source = wb["format"]
 
-        # Create new sheet with the same formatting and formulas
+        # --- Step 3: Copy the "format" sheet ---
+        if "Todays Units" in wb.sheetnames:
+            del wb["Todays Units"]
+
+        source = wb["format"]
         target = wb.copy_worksheet(source)
         target.title = "Todays Units"
 
-        # --- Step 3: Fill data into 'Todays Units' ---
+        # --- Step 4: Fill values in "Todays Units" ---
         for row in range(1, target.max_row + 1):
             lab_name = target[f"A{row}"].value
+
             if lab_name:
                 match = summary_df_agg[summary_df_agg["Lab Name"] == lab_name]
                 if not match.empty:
@@ -238,6 +283,7 @@ if uploaded_file and user_date_input and uploaded_file_2:
                     target[f"G{row}"].value = match["Sum"]
                     target[f"I{row}"].value = match["Hold"]
                     target[f"J{row}"].value = match["Cancel"]
+
                 elif lab_name == "Total No. of Exo (Units)":
                     target[f"B{row}"].value = Exocad_cases
                     target[f"C{row}"].value = Exocad_units
@@ -250,10 +296,11 @@ if uploaded_file and user_date_input and uploaded_file_2:
                     target[f"B{row}"].value = Restarted_count
                     target[f"C{row}"].value = Restarted_sum
 
-        # --- Step 4: Save workbook into memory for download ---
+        # --- Step 5: Save workbook to memory ---
         final_buffer = BytesIO()
         wb.save(final_buffer)
         final_buffer.seek(0)
+
 
         # # --- Step 5: Streamlit download button ---
         # st.download_button(
@@ -309,5 +356,24 @@ if uploaded_file and user_date_input and uploaded_file_2:
     except Exception as e:
         st.error(f"❌ Error: {e}")
 
-# else:
-#     st.info("👆 Please upload your `.xlsx` file and enter a cutoff date (DD/MM) to begin.")
+
+st.markdown(
+    """
+    <div style="
+        background-color: #e3f2fd;
+        padding: 15px;
+        border-left: 6px solid #1565c0;
+        border-radius: 10px;
+        font-size: 15px;
+        color: #0d47a1;
+        text-align: justify;
+        line-height: 1.5;
+    ">
+        <b>💡 Final Note:</b> After this is done, all the conditional formatting will be removed and no sorting is done for now. 
+        Please make sure to fix it. Double-check all Excel formulas and ensure data accuracy before sharing.
+    </div>
+    """,
+    unsafe_allow_html=True
+)
+
+
