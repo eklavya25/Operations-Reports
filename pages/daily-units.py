@@ -120,14 +120,18 @@ if uploaded_file and user_date_input and uploaded_file_2:
         mask = (
             (df1["Destination"] == "Easydent Dental Lab") &
             (df1["Software"].isna()) &
-            (
-                df1["Lab Name"].str.contains("EDDL Impression|Showcase Dental Lab|4G Dental Lab", case=False, na=False)
-            )
+            (df1["Lab Name"].str.strip().isin(["EDDL Impression", "Showcase Dental Lab", "4G Dental Lab"]))
         )
-
-        # Update the blank values to "Exocad"
         df1.loc[mask, "Software"] = "Exocad"
 
+        
+
+        mask = (
+            (df1["Destination"] == "Easydent Dental Lab") &
+            (df1["Software"].isna()) &
+            (df1["Case Type"].str.strip().isin(["M", "M+"]))
+        )
+        df1.loc[mask, "Software"] = "3Shape"
 
 
         # Step 1: Filter matching rows
