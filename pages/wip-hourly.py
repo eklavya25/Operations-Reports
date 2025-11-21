@@ -4,7 +4,7 @@ import pandas as pd
 import numpy as np
 import re
 
-st.set_page_config(page_title="WIP Report Generator", layout="wide")
+st.set_page_config(page_title="WIP hourly", layout="wide")
 
 # ----------------------------
 # Helper functions
@@ -21,7 +21,7 @@ def calculate_units_with_rows(group, day_col, hour_col):
         g[hour_col] = g[hour_col].fillna(0).astype(int)
 
         if day in ['Fri', 'Mon']:
-            base_cutoff = 18
+            base_cutoff = 17
             cutoff_index = None
             for h in range(base_cutoff, 24):
                 cutoff_rows = g[g[hour_col] == h]
@@ -34,7 +34,7 @@ def calculate_units_with_rows(group, day_col, hour_col):
                 total += contributing_rows['#Units'].sum()
 
         elif day in ['Tue', 'Wed', 'Thu', 'Sat']:
-            base_cutoff = 17
+            base_cutoff = 16
             cutoff_index = None
             for h in range(base_cutoff, 24):
                 cutoff_rows = g[g[hour_col] == h]
@@ -88,7 +88,7 @@ def safe_num(x):
 # ----------------------------
 # UI
 # ----------------------------
-st.title("WIP-Hourly Report Generator")
+st.title("WIP-Hourly")
 st.write("Upload your `.xls` / `.xlsx` file")
 
 uploaded_file = st.file_uploader("Choose a WIP file", type=["xls", "xlsx"])
