@@ -283,8 +283,8 @@ if uploaded_file and user_date_input and uploaded_file_2:
                     target[f"C{row}"].value = match["Last_Order_ID"]
                     target[f"F{row}"].value = match["Count"]
                     target[f"G{row}"].value = match["Sum"]
-                    target[f"I{row}"].value = match["Hold"]
-                    target[f"J{row}"].value = match["Cancel"]
+                    target[f"H{row}"].value = match["Hold"]
+                    target[f"I{row}"].value = match["Cancel"]
 
                 elif lab_name == "Total No. of Exo (Units)":
                     target[f"B{row}"].value = Exocad_cases
